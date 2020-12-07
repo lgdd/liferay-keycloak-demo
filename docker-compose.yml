@@ -1,0 +1,49 @@
+version: "3"
+services:
+  liferay:
+    build:
+      dockerfile: liferay/Dockerfile
+      context: .
+      args:
+        - BASE_IMAGE=liferay/portal:7.3.5-ga6
+    ports:
+      - "80:8080"
+    env_file:
+      - ./liferay/variables.env
+    volumes:
+      - liferay_data:/opt/liferay/data
+      - ./liferay/files:/mnt/liferay/files
+    depends_on:
+      - db
+      - sso
+    entrypoint: /usr/local/bin/wait-for -t 60 db:3306 -- /usr/local/bin/liferay_entrypoint.sh
+  db:
+    image: mysql:8
+    env_file:
+      - ./mysql/variables.env
+    volumes:
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    cap_add:
+      - SYS_NICE
+  mail:
+    image: rnwood/smtp4dev:v3
+    ports:
+      - "5000:80"
+    volumes:
+      - smtp_data:/smtp4dev
+  sso:
+    image: jboss/keycloak
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./keycloak/variables.env
+    volumes:
+      - ./keycloak/liferay-realm.json:/tmp/liferay-realm.json
+    depends_on:
+      - db
+
+volumes:
+  liferay_data:
+  smtp_data:
+  db_data:
