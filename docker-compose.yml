@@ -33,16 +33,19 @@ services:
     volumes:
       - smtp_data:/smtp4dev
   sso:
-    image: jboss/keycloak
+    image: quay.io/keycloak/keycloak
     ports:
       - "8080:8080"
     env_file:
       - ./keycloak/variables.env
     volumes:
-      - ./keycloak/liferay-realm.json:/tmp/liferay-realm.json
+      - ./keycloak/liferay-realm.json:/opt/keycloak/data/import/liferay-realm.json
     depends_on:
       - db
-
+    command:
+      - start-dev
+      - --hostname-url=http://sso:8080/
+      - --import-realm
 volumes:
   liferay_data:
   smtp_data:
