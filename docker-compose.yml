@@ -5,7 +5,7 @@ services:
       dockerfile: liferay/Dockerfile
       context: .
       args:
-        - BASE_IMAGE=liferay/portal:7.3.5-ga6
+        - BASE_IMAGE=liferay/portal:7.4.3.55-ga55
     ports:
       - "80:8080"
     env_file:
