@@ -1,10 +1,22 @@
 # Liferay Keycloak Demo
 
-A pre-configured Docker Compose environment to demonstrate how to use Single Sign-On (SSO) on Liferay 7.3 using Keycloak as an OpenID Connect Provider (OIDC).
+A pre-configured Docker Compose environment to demonstrate how to use Single Sign-On (SSO) on Liferay 7.4.13 U55 using Keycloak as an OpenID Connect Provider (OIDC).
 
 ## Requirements
 
 - Docker 19+
+
+## Change Log
+
+`21th December 2020`
+
+- Updated Liferay version to Liferay 7.4.13 U55 and added `netcat` to the image.
+
+- The jboss/keycloak image does not seem to work on the Apple M1 chip, so this has been substituted with the quay.io/keycloak/keycloak image instead. This has lead to some configuration changes as well.
+
+- The client secret can no longer be null / unset. This has been updated to be `liferay`. You can change this value to what ever you wish in the osgi/configs files.
+
+- Updated keycloak configuration to reflect changes, i.e. OpenID Connect Urls and the environment variables for the initial admin account.
 
 ## Setup
 
@@ -54,6 +66,12 @@ By default, in `docker-compose.yml`, the port has not been forwarded to localhos
       - "3306:3306"
 ```
 > Number on the left is the one you're forwarding to your localhost, so make sure it's not already taken and if so, choose another one.
+
+### Why am I seeing the address already in use for port `5000`?
+
+Since macOS Monterey, port `5000` is used by Content Center, more specially by a AirPlay Receiver.
+
+Either disable the AirPlay Receiver via the System Preferences or change the port defined in the docker compose file for smtp4dev to another port, for example `5050`.
 
 ## License
 
