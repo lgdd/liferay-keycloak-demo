@@ -14,8 +14,17 @@ services:
         - BASE_IMAGE=liferay/portal:7.4.3.81-ga81
     ports:
       - "8080:8080"
-    env_file:
-      - ./liferay/variables.env
+    environment:
+      LIFERAY_INCLUDE_MINUS_AND_MINUS_OVERRIDE: portal-developer.properties
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME: org.postgresql.Driver
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL: jdbc:postgresql://postgres/liferay
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME: liferay
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD: liferay
+      LIFERAY_ADMIN_PERIOD_EMAIL_PERIOD_FROM_PERIOD_NAME: Liferay Demo
+      LIFERAY_ADMIN_PERIOD_EMAIL_PERIOD_FROM_PERIOD_ADDRESS: no-reply@liferay.demo
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_SMTP_PERIOD_HOST: mail
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_POP_NUMBER3__PERIOD_HOST: mail
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_SMTP_PERIOD_STARTTLS_PERIOD_ENABLE: false
     volumes:
       - liferay_data:/opt/liferay/data
       - ./liferay/files:/mnt/liferay/files
@@ -49,6 +58,7 @@ services:
       - "5000:80"
     volumes:
       - smtp_data:/smtp4dev
+
   sso:
     build:
       context: ./keycloak
@@ -57,8 +67,26 @@ services:
 #    image: quay.io/keycloak/keycloak
     ports:
       - "8543:8543"
-    env_file:
-      - keycloak/variables.env
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_IMPORT: /opt/keycloak/data/import/liferay-realm.json
+      KC_HOSTNAME: localhost
+#     KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_PORT: 8543
+#     KC_HTTP_ENABLED: "true"
+#     KC_HTTP_RELATIVE_PATH: /auth
+#     KC_HOSTNAME_PORT: 8180
+#     KC_PROXY: edge
+      KC_HTTPS_PORT: 8543
+      KC_DB_URL: 'jdbc:postgresql://postgres/liferay'
+#     KC_DB_USERNAME: postgres
+#     KC_DB_PASSWORD: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+#     KC_DB_SCHEMA: keycloak
+#     KC_DB_URL_PROPERTIES: "verifyServerCertificate=false&ssl=allow"
+      KEYCLOAK_STATISTICS: db,http,jgroups
     volumes:
       - ./keycloak/liferay-realm.json:/opt/keycloak/data/import/liferay-realm.json
     depends_on:
