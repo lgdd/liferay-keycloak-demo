@@ -14,7 +14,7 @@ services:
         - BASE_IMAGE=liferay/portal:7.4.3.81-ga81
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "6080:8080"
     environment:
       LIFERAY_INCLUDE_MINUS_AND_MINUS_OVERRIDE: portal-developer.properties
       LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME: org.postgresql.Driver
@@ -50,14 +50,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5452:5432"
+      - "6452:5432"
   #    command: [ "postgres", "-c", "log_statement=all" ]
 
   mail:
     image: rnwood/smtp4dev:v3
     restart: unless-stopped
     ports:
-      - "5000:80"
+      - "6000:80"
     volumes:
       - smtp_data:/smtp4dev
 
@@ -69,7 +69,7 @@ services:
 #    image: quay.io/keycloak/keycloak
     restart: unless-stopped
     ports:
-      - "8543:8443"
+      - "6543:8443"
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
