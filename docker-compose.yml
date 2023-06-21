@@ -1,37 +1,64 @@
 version: "3"
+
+volumes:
+  liferay_data:
+  smtp_data:
+  postgres_data:
+
 services:
   liferay:
     build:
       dockerfile: liferay/Dockerfile
       context: .
       args:
-        - BASE_IMAGE=liferay/portal:7.4.3.55-ga55
+        - BASE_IMAGE=liferay/portal:7.4.3.81-ga81
     ports:
-      - "80:8080"
-    env_file:
-      - ./liferay/variables.env
+      - "8080:8080"
+    environment:
+      LIFERAY_INCLUDE_MINUS_AND_MINUS_OVERRIDE: portal-developer.properties
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME: org.postgresql.Driver
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL: jdbc:postgresql://postgres/liferay
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME: liferay
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD: liferay
+      LIFERAY_ADMIN_PERIOD_EMAIL_PERIOD_FROM_PERIOD_NAME: Liferay Demo
+      LIFERAY_ADMIN_PERIOD_EMAIL_PERIOD_FROM_PERIOD_ADDRESS: no-reply@liferay.demo
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_SMTP_PERIOD_HOST: mail
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_POP_NUMBER3__PERIOD_HOST: mail
+      LIFERAY_MAIL_PERIOD_SESSION_PERIOD_MAIL_PERIOD_SMTP_PERIOD_STARTTLS_PERIOD_ENABLE: false
     volumes:
       - liferay_data:/opt/liferay/data
       - ./liferay/files:/mnt/liferay/files
     depends_on:
-      - db
+      - postgres
       - sso
-    entrypoint: /usr/local/bin/wait-for -t 60 db:3306 -- /usr/local/bin/liferay_entrypoint.sh
-  db:
-    image: mysql:8
-    env_file:
-      - ./mysql/variables.env
+    entrypoint: /usr/local/bin/wait-for -t 60 postgres:5432 -- /usr/local/bin/liferay_entrypoint.sh
+
+  postgres:
+    image: postgres:13-alpine
+    restart: unless-stopped
     volumes:
-      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
-      - db_data:/var/lib/mysql
-    cap_add:
-      - SYS_NICE
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_DB: liferay
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5452:5432"
+  #    command: [ "postgres", "-c", "log_statement=all" ]
+
   mail:
     image: rnwood/smtp4dev:v3
     ports:
       - "5000:80"
     volumes:
       - smtp_data:/smtp4dev
+
   sso:
     build:
       context: ./keycloak
@@ -40,18 +67,32 @@ services:
 #    image: quay.io/keycloak/keycloak
     ports:
       - "8543:8543"
-    env_file:
-      - ./keycloak/variables.env
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_IMPORT: /opt/keycloak/data/import/liferay-realm.json
+      KC_HOSTNAME: localhost
+#     KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_PORT: 8543
+#     KC_HTTP_ENABLED: "true"
+#     KC_HTTP_RELATIVE_PATH: /auth
+#     KC_HOSTNAME_PORT: 8180
+#     KC_PROXY: edge
+      KC_HTTPS_PORT: 8543
+      KC_DB_URL: 'jdbc:postgresql://postgres/liferay'
+#     KC_DB_USERNAME: postgres
+#     KC_DB_PASSWORD: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+#     KC_DB_SCHEMA: keycloak
+#     KC_DB_URL_PROPERTIES: "verifyServerCertificate=false&ssl=allow"
+      KEYCLOAK_STATISTICS: db,http,jgroups
     volumes:
       - ./keycloak/liferay-realm.json:/opt/keycloak/data/import/liferay-realm.json
     depends_on:
-      - db
+      - postgres
     command: start --optimized --import-realm
 #    command:
 #      - start-dev
 #      - --hostname-url=http://sso:8080/
 #      - --import-realm
-volumes:
-  liferay_data:
-  smtp_data:
-  db_data:
