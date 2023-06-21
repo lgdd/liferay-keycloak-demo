@@ -1,4 +1,10 @@
 version: "3"
+
+volumes:
+  liferay_data:
+  smtp_data:
+  postgres_data:
+
 services:
   liferay:
     build:
@@ -14,18 +20,29 @@ services:
       - liferay_data:/opt/liferay/data
       - ./liferay/files:/mnt/liferay/files
     depends_on:
-      - db
+      - postgres
       - sso
-    entrypoint: /usr/local/bin/wait-for -t 60 db:3306 -- /usr/local/bin/liferay_entrypoint.sh
-  db:
-    image: mysql:8
-    env_file:
-      - ./mysql/variables.env
+    entrypoint: /usr/local/bin/wait-for -t 60 postgres:5432 -- /usr/local/bin/liferay_entrypoint.sh
+
+  postgres:
+    image: postgres:13-alpine
+    restart: unless-stopped
     volumes:
-      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
-      - db_data:/var/lib/mysql
-    cap_add:
-      - SYS_NICE
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_DB: liferay
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5452:5432"
+  #    command: [ "postgres", "-c", "log_statement=all" ]
+
   mail:
     image: rnwood/smtp4dev:v3
     ports:
@@ -41,17 +58,13 @@ services:
     ports:
       - "8543:8543"
     env_file:
-      - ./keycloak/variables.env
+      - keycloak/variables.env
     volumes:
       - ./keycloak/liferay-realm.json:/opt/keycloak/data/import/liferay-realm.json
     depends_on:
-      - db
+      - postgres
     command: start --optimized --import-realm
 #    command:
 #      - start-dev
 #      - --hostname-url=http://sso:8080/
 #      - --import-realm
-volumes:
-  liferay_data:
-  smtp_data:
-  db_data:

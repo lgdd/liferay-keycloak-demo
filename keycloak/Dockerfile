@@ -2,7 +2,7 @@ ARG BASE_IMAGE=quay.io/keycloak/keycloak:21.1.1
 
 FROM ${BASE_IMAGE} AS builder
 
-ENV KC_DB=mysql
+ENV KC_DB=postgres
 
 # Install custom providers
 ADD --chown=keycloak:keycloak https://github.com/aerogear/keycloak-metrics-spi/releases/download/3.0.0/keycloak-metrics-spi-3.0.0.jar /opt/keycloak/providers/keycloak-metrics-spi-3.0.0.jar
