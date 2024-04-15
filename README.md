@@ -8,6 +8,10 @@ A pre-configured Docker Compose environment to demonstrate how to use Single Sig
 
 ## Change Log
 
+`4th April 2024`
+
+- Updated Liferay version to Liferay 7.4.13 U112
+
 `21th December 2020`
 
 - Updated Liferay version to Liferay 7.4.13 U55 and added `netcat` to the image.
